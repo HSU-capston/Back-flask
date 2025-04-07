@@ -2,8 +2,11 @@ from flask import Flask, request, jsonify, send_file,  send_from_directory, url_
 import os
 from processing import process_video, process_image
 from utils import get_video_rotation, rotate_video
+from connection import s3_connection
+from config import BUCKET_NAME
 
 app = Flask(__name__)
+s3 = s3_connection()
 
 # 업로드 폴더 설정
 UPLOAD_FOLDER = 'uploads/'
@@ -46,10 +49,11 @@ def upload_file():
             get_video_rotation(filename)
             final_score, grade, guide, processed_video_path = process_video(filename)  # 비디오 처리 함수 호출
             
-            video_url = url_for('processed_file', filename=os.path.basename(processed_video_path), _external=True)
+            # video_url = url_for('processed_file', filename=os.path.basename(processed_video_path), _external=True)
+            upload_video_to_s3(processed_video_path, filename)
 
             response = {
-                'video_url': video_url,
+                'video_url': "https://sportyup-s3.s3.ap-northeast-2.amazonaws.com/BowlingAnalyze/" + filename,
                 'message1': grade,
                 'message2': guide,
                 'score': final_score  # 예시 점수
@@ -63,6 +67,20 @@ def upload_file():
         print(f"오류 발생: {str(e)}")
         return jsonify(message=f"파일 저장 중 오류 발생: {str(e)}"), 500
 
+def upload_video_to_s3(processed_video_path, filename):
+    try:
+        # 비디오 파일 열기 (바이너리 모드로)
+        with open(processed_video_path, 'rb') as video_file:
+            # 비디오 파일을 S3에 업로드
+            s3.put_object(
+                Bucket=BUCKET_NAME,
+                Body=video_file,
+                Key="BowlingAnalyze/" + filename,  # S3에서 파일이 저장될 위치
+                ContentType='video/mp4'  # MIME 타입 지정
+            )
+            print("비디오 파일이 성공적으로 S3에 업로드되었습니다.")
+    except Exception as e:
+        print(f"비디오 업로드 중 오류 발생: {str(e)}")
 
 if __name__ == '__main__':
     # 폴더가 없으면 생성

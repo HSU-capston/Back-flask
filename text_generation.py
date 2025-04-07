@@ -1,6 +1,6 @@
 from openai import OpenAI
 import os
-os.environ["OPENAI_API_KEY"] = "키 넣으셈"
+os.environ["OPENAI_API_KEY"] = "키 값 넣으센"
 
 def evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count):
 
