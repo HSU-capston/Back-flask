@@ -28,7 +28,7 @@ def rotate_video(image_path, rotation):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     output_path = f"{image_path.split('.')[0]}_rotated.mp4"
     
-    out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'avc1'), 20.0, (height, width))
+    out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (height, width))
     
     while True:
         ret, frame = cap.read()

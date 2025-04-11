@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, send_file,  send_from_directory, url_for
 import os
 from processing import process_video, process_image
-from utils import get_video_rotation, rotate_video
 from connection import s3_connection
 from config import BUCKET_NAME
 
@@ -46,7 +45,6 @@ def upload_file():
 
         # 이미지 또는 비디오 파일 처리
         if file_extension in ['mp4', 'avi', 'mov']:
-            get_video_rotation(filename)
             final_score, grade, guide, processed_video_path = process_video(filename)  # 비디오 처리 함수 호출
             
             # video_url = url_for('processed_file', filename=os.path.basename(processed_video_path), _external=True)

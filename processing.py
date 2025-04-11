@@ -5,6 +5,7 @@ from PIL import Image
 import numpy as np
 import analyze
 import subprocess
+from utils import get_video_rotation, rotate_video
 
 # YOLO 모델 로드
 model = YOLO("model/yolo11m-pose.pt")
@@ -47,8 +48,13 @@ def process_video(video_path):
             out.write(annotated_frame)
         
         out.release()
-        reencoded_path = result_video_path.replace('.mp4', '_web.mp4')
-        reencode_to_browser_compatible(result_video_path, reencoded_path)
+        
+        rotate_result_video_path = rotate_video(result_video_path, -90)
+        
+        reencoded_path = rotate_result_video_path.replace('.mp4', '_web.mp4')
+        reencode_to_browser_compatible(rotate_result_video_path, reencoded_path)
+        
+        
         cap.release()
         
         final_score, grade, guide = analyze.analyze(all_keypoints_data, frame_width, frame_height)
