@@ -52,8 +52,8 @@ def upload_file():
 
             response = {
                 'video_url': "https://sportyup-s3.s3.ap-northeast-2.amazonaws.com/BowlingAnalyze/" + filename,
-                'message1': grade,
-                'message2': guide,
+                'message1': guide,
+                'message2': grade,
                 'score': final_score  # 예시 점수
             }
             return jsonify(response)
