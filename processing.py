@@ -57,10 +57,10 @@ def process_video(video_path):
         
         cap.release()
         
-        final_score, grade, guide = analyze.analyze(all_keypoints_data, frame_width, frame_height)
+        final_score, grade, guide_good_point, guide_bad_point, guide_recommend = analyze.analyze(all_keypoints_data, frame_width, frame_height)
 
         #return final_score, grade, guide, result_video_path
-        return final_score, grade, guide, reencoded_path
+        return final_score, grade, guide_good_point, guide_bad_point, guide_recommend, reencoded_path
     except Exception as e:
         print(f"비디오 처리 중 오류 발생: {str(e)}")
 

@@ -45,15 +45,17 @@ def upload_file():
 
         # 이미지 또는 비디오 파일 처리
         if file_extension in ['mp4', 'avi', 'mov']:
-            final_score, grade, guide, processed_video_path = process_video(filename)  # 비디오 처리 함수 호출
+            final_score, grade, guide_good_point, guide_bad_point, guide_recommend, processed_video_path = process_video(filename)  # 비디오 처리 함수 호출
             
             # video_url = url_for('processed_file', filename=os.path.basename(processed_video_path), _external=True)
             upload_video_to_s3(processed_video_path, filename)
 
             response = {
                 'video_url': "https://sportyup-s3.s3.ap-northeast-2.amazonaws.com/BowlingAnalyze/" + filename,
-                'message1': guide,
-                'message2': grade,
+                'good': guide_good_point,
+                'bad': guide_bad_point,
+                'recommend': guide_recommend,
+                'grade': grade,
                 'score': final_score  # 예시 점수
             }
             return jsonify(response)
