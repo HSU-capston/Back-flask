@@ -53,7 +53,7 @@ def analyze(all_keypoints_data, frame_width, frame_height):
             prev_left_ankle_y = left_ankle_y
             prev_right_ankle_y = right_ankle_y
 
-        print_keypoints(keypoints_data)
+   #     print_keypoints(keypoints_data)
     
     # 평균 계산
     avg_shoulder_angle_diff = sum(shoulder_angles) / len(shoulder_angles) if shoulder_angles else 0
@@ -213,4 +213,3 @@ def print_keypoints(keypoints_data):
         else:
             coordinates_text = f"({int(x)}, {int(y)})"
         print(f"{KEYPOINT_NAMES[i]}: {coordinates_text}")
-

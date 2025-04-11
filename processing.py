@@ -4,6 +4,7 @@ import os
 from PIL import Image
 import numpy as np
 import analyze
+import subprocess
 
 # YOLO 모델 로드
 model = YOLO("model/yolo11m-pose.pt")
@@ -20,8 +21,9 @@ def process_video(video_path):
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         
-        out = cv2.VideoWriter(result_video_path, cv2.VideoWriter_fourcc(*'X264'), 30, (frame_width, frame_height))
-        
+       # out = cv2.VideoWriter(result_video_path, cv2.VideoWriter_fourcc(*'X264'), 30, (frame_width, frame_height))
+        out = cv2.VideoWriter(result_video_path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width, frame_height))
+
         # 키포인트 데이터를 저장할 배열
         all_keypoints_data = []
 
@@ -45,12 +47,14 @@ def process_video(video_path):
             out.write(annotated_frame)
         
         out.release()
+        reencoded_path = result_video_path.replace('.mp4', '_web.mp4')
+        reencode_to_browser_compatible(result_video_path, reencoded_path)
         cap.release()
         
         final_score, grade, guide = analyze.analyze(all_keypoints_data, frame_width, frame_height)
 
-        return final_score, grade, guide, result_video_path
-
+        #return final_score, grade, guide, result_video_path
+        return final_score, grade, guide, reencoded_path
     except Exception as e:
         print(f"비디오 처리 중 오류 발생: {str(e)}")
 
@@ -71,3 +75,18 @@ def process_image(image_path):
 
     except Exception as e:
         print(f"이미지 처리 중 오류 발생: {str(e)}")
+
+def reencode_to_browser_compatible(input_path, output_path):
+    try:
+        subprocess.run([
+            "ffmpeg",
+            "-i", input_path,
+            "-vcodec", "libx264",
+            "-acodec", "aac",
+            "-movflags", "+faststart",
+            output_path
+        ], check=True)
+        return output_path
+    except subprocess.CalledProcessError as e:
+        print(f"ffmpeg 재인코딩 실패: {e}")
+        return input_path  # 재인코딩 실패 시 원본 그대로 리턴
