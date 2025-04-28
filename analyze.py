@@ -102,6 +102,8 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
     print(f"Total Wrist Movement Distance: {wrist_movement_total}")
     print(f"Total Ankle Height Change Events: {ankle_switch_count}")
     
+    print(f"\nyour level: {user_level}")
+    
     guide = text_generation.evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count, user_level)
     guide_good_point = guide["잘한점"]
     guide_bad_point = guide["개선점"]
