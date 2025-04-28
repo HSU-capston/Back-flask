@@ -12,7 +12,7 @@ from utils import get_video_rotation, rotate_video
 # YOLO 모델 로드
 model = YOLO("model/yolo11m-pose.pt")
 
-def process_video(video_path):
+def process_video(video_path, user_level):
     try:
         print("[INFO] YOLO 모델로 영상 분석 시작")
         results = model(video_path, stream=True)
@@ -87,7 +87,7 @@ def process_video(video_path):
         else:
             print("[INFO] 키포인트 분석 중...")
             final_score, grade, guide_good_point, guide_bad_point, guide_recommend = analyze.analyze(
-                all_keypoints_data, frame_width, frame_height
+                all_keypoints_data, frame_width, frame_height, user_level
             )
 
         print(f"[INFO] 분석 완료 - 점수: {final_score}, 등급: {grade}")

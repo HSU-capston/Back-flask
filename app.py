@@ -29,9 +29,10 @@ def upload_file():
 
     # S3 URL로 파일 받기
     video_url = request.form.get("video_url")
+    user_level = request.form.get("user_level")
     analyzed_key = request.form.get("analyzed_key")
 
-    if not video_url or not analyzed_key:
+    if not video_url or not analyzed_key or not user_level:
         return jsonify(message="필수 파라미터 누락"), 400
         
     
@@ -51,7 +52,7 @@ def upload_file():
         temp_input_path = download_video_from_s3_url(video_url)
 
         # 비디오 처리
-        final_score, grade, good, bad, recommend, processed_path = process_video(temp_input_path)
+        final_score, grade, good, bad, recommend, processed_path = process_video(temp_input_path, user_level)
 
         # 결과 영상 S3 업로드
         analyzed_url = upload_video_to_s3(processed_path, analyzed_key)

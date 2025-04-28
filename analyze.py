@@ -8,7 +8,7 @@ KEYPOINT_NAMES = [
     "Left Knee", "Right Knee", "Left Ankle", "Right Ankle"
 ]
 
-def analyze(all_keypoints_data, frame_width, frame_height):
+def analyze(all_keypoints_data, frame_width, frame_height, user_level):
     shoulder_angles = []  # 오른쪽 어깨 각도 차이
     movements = []  # 이동 거리
     wrist_movement_total = 0  # 오른쪽 손목의 누적 이동 거리
@@ -102,7 +102,7 @@ def analyze(all_keypoints_data, frame_width, frame_height):
     print(f"Total Wrist Movement Distance: {wrist_movement_total}")
     print(f"Total Ankle Height Change Events: {ankle_switch_count}")
     
-    guide = text_generation.evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count)
+    guide = text_generation.evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count, user_level)
     guide_good_point = guide["잘한점"]
     guide_bad_point = guide["개선점"]
     guide_recommend = guide["추천"]
@@ -112,12 +112,12 @@ def analyze(all_keypoints_data, frame_width, frame_height):
     print(f"\n점수: {final_score}")
 
     # 점수에 따라 등급 평가
-    if final_score >= 90:
-        grade = "BEST"
-    elif final_score >= 75:
-        grade = "GREAT"
-    elif final_score >= 60:
+    if final_score >= 80:
+        grade = "EXCELLENT"
+    elif final_score >= 74:
         grade = "GOOD"
+    elif final_score >= 60:
+        grade = "COMMON"
     else:
         grade = "BAD"
 
