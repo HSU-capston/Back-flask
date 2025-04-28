@@ -46,7 +46,7 @@ def process_video(video_path):
         cap.release()
 
         print("[INFO] 영상 회전 중...")
-        rotation = get_video_rotation("result_video_path")
+        rotation = get_video_rotation(result_video_path)
         rotate_result_video_path = result_video_path
         
         if rotation is None:
