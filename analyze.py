@@ -13,11 +13,14 @@ def analyze(all_keypoints_data, frame_width, frame_height):
     movements = []  # 이동 거리
     wrist_movement_total = 0  # 오른쪽 손목의 누적 이동 거리
     ankle_switch_count = 0  # 발목 높이가 바뀐 시점의 수
-    shoulder_Angle_void=0 # 유효하지 않은 어깨 각도
      
     prev_right_wrist = None  # 이전 오른쪽 손목 좌표
     prev_left_ankle_y = None  # 이전 왼쪽 발목 y 좌표
     prev_right_ankle_y = None  # 이전 오른쪽 발목 y 좌표
+    
+    valid_face_count = 0
+    ear_count = 0
+    total_frames = len(all_keypoints_data)
     
     for frame_idx, keypoints_data in enumerate(all_keypoints_data):
         print(f"\n Frame [{frame_idx + 1}]:")
@@ -29,7 +32,8 @@ def analyze(all_keypoints_data, frame_width, frame_height):
         
         # 2. 어깨, 엉덩이 좌표 이동 거리 계산 (상대적인 거리)
         movement = calculate_movement(keypoints_data, frame_width, frame_height)
-        movements.append(movement)
+        if movement:
+            movements.append(movement)
         
         # 3. 오른쪽 손목 이동 거리 누적 (상대적인 이동)
         right_wrist = keypoints_data[KEYPOINT_NAMES.index("Right Wrist")]
@@ -52,21 +56,45 @@ def analyze(all_keypoints_data, frame_width, frame_height):
             # 이전 발목 y 좌표 업데이트
             prev_left_ankle_y = left_ankle_y
             prev_right_ankle_y = right_ankle_y
+        
+        # 동영상 유효 검사    
+        nose = keypoints_data[KEYPOINT_NAMES.index("Nose")]
+        left_eye = keypoints_data[KEYPOINT_NAMES.index("Left Eye")]
+        right_eye = keypoints_data[KEYPOINT_NAMES.index("Right Eye")]
+        left_ear = keypoints_data[KEYPOINT_NAMES.index("Left Ear")]
+        right_ear = keypoints_data[KEYPOINT_NAMES.index("Right Ear")]
+        
+        # 얼굴이 탐지된 프레임 수
+        if not is_invalid_point(nose) and not is_invalid_point(left_eye) and not is_invalid_point(right_eye):
+            valid_face_count += 1
 
-   #     print_keypoints(keypoints_data)
+        # 귀가 탐지된 프레임 수
+        if not is_invalid_point(left_ear) or not is_invalid_point(right_ear):
+            ear_count += 1
+    
+    face_ratio = valid_face_count / total_frames
+    ear_ratio = ear_count / total_frames
+
+    # 조건에 따라 리턴
+    if face_ratio > 0.7 or (ear_ratio < 0.7):
+        final_score = 0
+        grade = "BAD"
+        guide_good_point = "분석 가능한 자세가 감지되지 않았습니다."
+        guide_bad_point = "영상에서 사람 또는 키포인트를 인식하지 못했습니다."
+        guide_recommend = "카메라 위치를 조정하거나 조명을 개선해주세요."
+        
+        print(f"\n점수: {final_score}")
+        print(f"등급: {grade}")
+        print(f"잘한 점: {guide_good_point}")
+        print(f"부족한 점: {guide_bad_point}")
+        print(f"추천: {guide_recommend}")
+        
+        return final_score, grade, guide_good_point, guide_bad_point, guide_recommend
     
     # 평균 계산
     avg_shoulder_angle_diff = sum(shoulder_angles) / len(shoulder_angles) if shoulder_angles else 0
     avg_movement = sum(movements) / len(movements) if movements else 0
-    
-    # 각 항목 점수 계산
-    shoulder_angle_score = score_shoulder_angle_diff(avg_shoulder_angle_diff)
-    movement_score = score_movement_distance(avg_movement)
-    wrist_movement_score = score_wrist_movement(wrist_movement_total)
-    ankle_change_score = score_ankle_change_events(ankle_switch_count)
 
-    # 평균 점수 계산
-    final_score = (shoulder_angle_score + movement_score + wrist_movement_score + ankle_change_score) / 4
     
     print(f"\n frame_width: {frame_width} frame_height: {frame_height}")
     print(f"Average Shoulder Angle Difference from 90 degrees: {avg_shoulder_angle_diff} degrees")
@@ -74,12 +102,14 @@ def analyze(all_keypoints_data, frame_width, frame_height):
     print(f"Total Wrist Movement Distance: {wrist_movement_total}")
     print(f"Total Ankle Height Change Events: {ankle_switch_count}")
     
-    print(f"\nShoulder Angle Score: {shoulder_angle_score}")
-    print(f"Movement Score: {movement_score}")
-    print(f"Wrist Movement Score: {wrist_movement_score}")
-    print(f"Ankle Height Change Score: {ankle_change_score}")
-
-    print(f"\nFinal Score: {final_score:.2f}")
+    guide = text_generation.evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count)
+    guide_good_point = guide["잘한점"]
+    guide_bad_point = guide["개선점"]
+    guide_recommend = guide["추천"]
+    final_score = guide["점수"]
+    
+    
+    print(f"\n점수: {final_score}")
 
     # 점수에 따라 등급 평가
     if final_score >= 90:
@@ -91,15 +121,12 @@ def analyze(all_keypoints_data, frame_width, frame_height):
     else:
         grade = "BAD"
 
-    print(f"Grade: {grade}")
+    print(f"등급: {grade}")
     
-    guide = text_generation.evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count)
-    guide_good_point = guide["잘한점"]
-    guide_bad_point = guide["개선점"]
-    guide_recommend = guide["추천"]
-    print(guide_good_point)
-    print(guide_bad_point)
-    print(guide_recommend)
+    print(f"잘한 점: {guide_good_point}")
+    print(f"부족한 점: {guide_bad_point}")
+    print(f"추천: {guide_recommend}")
+    
     return final_score, grade, guide_good_point, guide_bad_point, guide_recommend
 
 
@@ -175,39 +202,6 @@ def calculate_angle(A, B, C):
 def is_invalid_point(point):
     x, y = point
     return x == 0 and y == 0
-
-# 점수화 함수
-def score_shoulder_angle_diff(angle_diff):
-    if 0 <= angle_diff <= 15:
-        return 85 + (angle_diff / 15) * 5  # 70 ~ 90점 범위
-    elif 15 < angle_diff <= 30:
-        return 90 + (angle_diff - 15) / 15 * 10  # 90 ~ 100점 범위
-    else:
-        return 60  # 30도 이상인 경우 낮은 점수
-
-def score_movement_distance(movement):
-    if 0 <= movement <= 0.1:
-        return 85 + (movement / 0.1) * 5  # 70 ~ 90점 범위
-    elif 0.1 < movement <= 0.2:
-        return 90 + (movement - 0.1) / 0.1 * 10  # 90 ~ 100점 범위
-    else:
-        return 60  # 0.2 이상인 경우 낮은 점수
-
-def score_wrist_movement(wrist_movement):
-    if 0 <= wrist_movement <= 10:
-        return 85 + (wrist_movement / 10) * 5  # 70 ~ 90점 범위
-    elif 10 < wrist_movement <= 30:
-        return 90 + (wrist_movement - 10) / 20 * 10  # 90 ~ 100점 범위
-    else:
-        return 60  # 30 이상인 경우 낮은 점수
-
-def score_ankle_change_events(ankle_changes):
-    if 0 <= ankle_changes <= 3:
-        return 85 + (ankle_changes / 3) * 5  # 70 ~ 90점 범위
-    elif 3 < ankle_changes <= 10:
-        return 90 + (ankle_changes - 3) / 7 * 10  # 90 ~ 100점 범위
-    else:
-        return 60  # 10 이상인 경우 낮은 점수
 
 # 키포인트 출력 함수
 def print_keypoints(keypoints_data):
