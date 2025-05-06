@@ -23,7 +23,7 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
     total_frames = len(all_keypoints_data)
     
     for frame_idx, keypoints_data in enumerate(all_keypoints_data):
-        print(f"\n Frame [{frame_idx + 1}]:")
+        #print(f"\n Frame [{frame_idx + 1}]:")
         
         # 1. 오른쪽 어깨 각도 차이 계산
         right_shoulder_angle_diff = calculate_shoulder_angle_diff(keypoints_data)
@@ -102,14 +102,21 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
     print(f"Total Wrist Movement Distance: {wrist_movement_total}")
     print(f"Total Ankle Height Change Events: {ankle_switch_count}")
     
-    print(f"\nyour level: {user_level}")
-    
-    guide = text_generation.evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count, user_level)
+    guide,  interpretations = text_generation.evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count, user_level)
     guide_good_point = guide["잘한점"]
     guide_bad_point = guide["개선점"]
     guide_recommend = guide["추천"]
     final_score = guide["점수"]
     
+    shoulder_angle_diff_score = interpretations["shoulder_angle_diff"]
+    movement_distance_score = interpretations["movement_distance"]
+    wrist_movement_total_score = interpretations["wrist_movement_total"]
+    ankle_switch_count_score = interpretations["ankle_switch_count"]
+    
+    print(f" - 어깨 각도 차이 점수         : {shoulder_angle_diff_score}\n")
+    print(f" - 이동 거리 점수              : {movement_distance_score}\n")
+    print(f" - 손목 움직임 총합 점수       : {wrist_movement_total_score}\n")
+    print(f" - 발목 교차 횟수 점수         : {ankle_switch_count_score}\n")
     
     print(f"\n점수: {final_score}")
 
@@ -129,7 +136,7 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
     print(f"부족한 점: {guide_bad_point}")
     print(f"추천: {guide_recommend}")
     
-    return final_score, grade, guide_good_point, guide_bad_point, guide_recommend
+    return final_score, grade, guide_good_point, guide_bad_point, guide_recommend, interpretations
 
 
 # 오른쪽 어깨 각도 차이 계산 함수

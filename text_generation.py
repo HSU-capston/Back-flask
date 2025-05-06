@@ -52,8 +52,8 @@ CRITERIA = {
         "very_low": 1,
         "low": 2,
         "slightly_low": 3,
-        "normal_min": 4,
-        "normal": 4.5,
+        "normal_min": 3,
+        "normal": 4,
         "normal_max": 5,
         "slightly_high": 6,
         "high": 7,
@@ -62,30 +62,22 @@ CRITERIA = {
     }
 }
 
-# 수치를 1~10 점수로 변환하는 함수
 def interpret_value_to_score(value, thresholds):
-    if value < thresholds["very_low"]:
-        return 1
-    elif value < thresholds["low"]:
-        return 2
-    elif value < thresholds["slightly_low"]:
-        return 3
-    elif value < thresholds["normal_min"]:
-        return 4
-    elif value < thresholds["normal"]:
-        return 5
-    elif value <= thresholds["normal"]:
-        return 6
-    elif value <= thresholds["normal_max"]:
-        return 7
-    elif value <= thresholds["slightly_high"]:
-        return 8
-    elif value <= thresholds["high"]:
-        return 9
-    elif value <= thresholds["very_high"]:
-        return 10
-    else:
-        return 10
+    # 기준 키 순서 (11개 지점 → 11개 점수 구간, 0~10점)
+    keys_ordered = [
+        "very_very_low", "very_low", "low", "slightly_low",
+        "normal_min", "normal", "normal_max", "slightly_high",
+        "high", "very_high", "very_very_high"
+    ]
+
+    values = [thresholds[k] for k in keys_ordered]
+
+    # 0~10점 구간 매핑
+    for i in range(10):
+        if values[i] <= value < values[i + 1]:
+            return i  # 0~9점
+    return 10  # 최상단 이상은 10점
+
 
 # 메인 평가 함수
 def evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_total, ankle_switch_count, user_level):
@@ -108,21 +100,29 @@ def evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_
 
     # 프롬프트 작성
     prompt = f"""
-제가 볼링 자세 평가를 완료했습니다. 결과는 아래와 같습니다:
+    제가 볼링 자세 평가를 완료했습니다. 결과는 아래와 같습니다:
 
-- 평균 어깨 각도 차이 (90도에서): {avg_shoulder_angle_diff}도 → 1~10 구간 중 {interpretations["shoulder_angle_diff"]}단계
-- 평균 이동 거리: {avg_movement} → 1~10 구간 중 {interpretations["movement_distance"]}단계
-- 손목 이동 거리 총합: {wrist_movement_total} → 1~10 구간 중 {interpretations["wrist_movement_total"]}단계
-- 발목 높이 변화 이벤트 수: {ankle_switch_count} → 1~10 구간 중 {interpretations["ankle_switch_count"]}단계
+    - 평균 어깨 각도 차이 (90도에서): {avg_shoulder_angle_diff}도 → 0~10점 중 {interpretations["shoulder_angle_diff"]}점
+    - 평균 이동 거리: {avg_movement} → 0~10점 중 {interpretations["movement_distance"]}점
+    - 손목 이동 거리 총합: {wrist_movement_total} → 0~10점 중 {interpretations["wrist_movement_total"]}점
+    - 발목 높이 변화 이벤트 수: {ankle_switch_count} → 0~10점 중 {interpretations["ankle_switch_count"]}점
 
-※ 괄호 안 숫자는 1(가장 부족) ~ 10(가장 과한) 단계 중 몇 번째인지 나타냅니다 5나 6에 가까울 수록 높은 점수 입니다 5나 6이 아니라면 나쁜 점수 입니다 4나 7도 나쁜 점수 입니다 점수를 산정할 떄 크게 반영 하세요.
-하지만 유저의 현재 실력은 {user_level}로 ADVANCED의 경우에는 더 높은 수준의 피드백 텍스트를 생성하고 BEGINNER는 4나 7도 좋은 점수 입니다 높은 점수를 주세요.
+    ※ 점수는 0점(가장 부족하거나 과한 상태) ~ 10점(가장 부족하거나 과한 상태)까지이며,  
+    5점이 가장 이상적인 자세를 의미합니다.  
+    5점에서 멀어질수록 개선이 필요한 점수이며, 0~3점 또는 7~10점은 많이 개선이 필요한 상태입니다.  
+    4점 또는 6점은 약간의 개선이 필요합니다.
 
-이 결과를 바탕으로 저의 볼링 자세에 대한 평가와 피드백을 주시고, 잘 된 점과 개선이 필요한 점을 알려주세요.
-그리고 개선이 필요한 점이 크게 없다면, 개선이 필요한 점을 말할 때 잘하고 있지만 어떻게 더 했으면 좋겠다는 느낌으로 말해주세요.
-반대로 개선이 필요한 점이 많으면 잘 된 점이 없다고 솔직하게 말해주세요. 
-또한, 다음 투구는 어떻게 하면 좋을지 추천해 주세요 이 또한 개선할 점이 많이 없다면 유지하라고 짧게 말하고 다음 자세를 추천해 주세요. 마지막으로 총 평가 점수를 0부터 100 사이 숫자로 제시해 주세요.
-"""
+    유저의 현재 실력은 {user_level}입니다.  
+    - BEGINNER는 4~6점도 좋은 점수로 간주될 수 있습니다.  
+    - ADVANCED는 반드시 5점에 가까운 점수를 지향해야 합니다.
+
+    이 평가 결과를 바탕으로 저의 볼링 자세에 대해 아래 내용을 포함하여 JSON 형식으로 평가해 주세요:
+
+    1. 잘한 점  
+    2. 개선이 필요한 점  
+    3. 다음 투구에 대한 짧은 추천  
+    4. 총 점수 (0~100점 사이의 숫자)
+    """
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -130,13 +130,14 @@ def evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_
             {
                 "role": "system",
                 "content": (
-                    "당신은 볼링 자세에 대한 전문가입니다. 주어진 데이터를 바탕으로 자세 평가를 "
-                    "4가지 항목으로 나눠서 제공하세요: "
-                    "1) 잘한 점, 2) 개선이 필요한 점, 3) 다음 투구를 위한 추천, 4) 총 평가 점수 (0~100점 사이 숫자). "
-                    "이동 거리나 수치적인 언급은 자제하고 대신 '크게', '적게', '많이' 등으로 표현해 주세요. "
-                    "전체 피드백은 반드시 JSON 코드블럭 내에 반환해 주세요. 예:\n"
+                    "당신은 볼링 자세에 대한 전문가입니다. 주어진 데이터를 바탕으로 다음 4가지 항목으로 자세를 평가하세요:\n"
+                    "1) 잘한 점, 2) 개선이 필요한 점, 3) 다음 투구를 위한 추천, 4) 총 평가 점수 (0~100점 사이 숫자).\n\n"
+                    "※ 점수는 0~10점 기준이며, 5점이 가장 이상적인 자세입니다. 5점에서 멀어질수록 개선이 필요합니다.\n"
+                    "BEGINNER의 경우 약간 넓게 해석하고, ADVANCED의 경우 더 엄격히 평가하세요.\n"
+                    "가능하면 수치나 숫자는 직접 언급하지 말고 '많이', '적게', '부드럽게' 등으로 표현하세요.\n"
+                    "전체 결과는 반드시 JSON 코드블럭 내에 다음과 같은 형식으로 제공해 주세요:\n"
                     "```json\n"
-                    "{\"잘한점\": \"...\", \"개선점\": \"...\", \"추천\": \"...\", \"점수\": 85}\n"
+                    "{ \"잘한점\": \"...\", \"개선점\": \"...\", \"추천\": \"...\", \"점수\": 85 }\n"
                     "```"
                 )
             },
@@ -162,5 +163,6 @@ def evaluate_bowling_form(avg_shoulder_angle_diff, avg_movement, wrist_movement_
             "추천": "다음 투구를 위한 추천을 확인할 수 없습니다.",
             "점수": 50
         }
-
-    return result
+        
+    #print("해석된 점수:", interpretations)
+    return result,  interpretations
