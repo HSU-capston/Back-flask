@@ -23,9 +23,9 @@ CRITERIA = {
     },
     "movement_distance": {
         "very_very_low": 0,
-        "very_low": 0.19,
-        "low": 0.20,
-        "slightly_low": 0.21,
+        "very_low": 0.05,
+        "low": 0.10,
+        "slightly_low": 0.15,
         "normal_min": 0.22,
         "normal": 0.23,
         "normal_max": 0.25,
@@ -36,16 +36,16 @@ CRITERIA = {
     },
     "wrist_movement_total": {
         "very_very_low": 0,
-        "very_low": 5,
-        "low": 7,
-        "slightly_low": 9,
-        "normal_min": 10,
+        "very_low": 3,
+        "low": 4,
+        "slightly_low": 5,
+        "normal_min": 9,
         "normal": 15,
         "normal_max": 16,
-        "slightly_high": 16.5,
-        "high": 17,
-        "very_high": 28,
-        "very_very_high": 30
+        "slightly_high": 18,
+        "high": 20,
+        "very_high": 30,
+        "very_very_high": 35
     },
     "ankle_switch_count": {
         "very_very_low": 0,
