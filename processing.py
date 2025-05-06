@@ -79,10 +79,10 @@ def process_video(video_path, user_level):
             guide_bad_point = "영상에서 사람 또는 키포인트를 인식하지 못했습니다."
             guide_recommend = "카메라 위치를 조정하거나 조명을 개선해주세요."
             
-            interpretations["shoulder_angle_diff"]
-            interpretations["movement_distance"]
-            interpretations["wrist_movement_total"]
-            interpretations["ankle_switch_count"]
+            interpretations["shoulder_angle_diff"] = 0
+            interpretations["movement_distance"] = 0
+            interpretations["wrist_movement_total"] = 0
+            interpretations["ankle_switch_count"] = 0 
             
             print(f"점수: {final_score}")
             print(f"등급: {grade}")
