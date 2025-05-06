@@ -89,7 +89,12 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
         print(f"부족한 점: {guide_bad_point}")
         print(f"추천: {guide_recommend}")
         
-        return final_score, grade, guide_good_point, guide_bad_point, guide_recommend
+        interpretations["shoulder_angle_diff"] = 0
+        interpretations["movement_distance"] = 0
+        interpretations["wrist_movement_total"] = 0
+        interpretations["ankle_switch_count"] = 0 
+        
+        return final_score, grade, guide_good_point, guide_bad_point, guide_recommend, interpretations
     
     # 평균 계산
     avg_shoulder_angle_diff = sum(shoulder_angles) / len(shoulder_angles) if shoulder_angles else 0
