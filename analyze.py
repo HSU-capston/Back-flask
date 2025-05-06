@@ -89,6 +89,8 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
         print(f"부족한 점: {guide_bad_point}")
         print(f"추천: {guide_recommend}")
         
+        interpretations = {}
+        
         interpretations["shoulder_angle_diff"] = 0
         interpretations["movement_distance"] = 0
         interpretations["wrist_movement_total"] = 0
