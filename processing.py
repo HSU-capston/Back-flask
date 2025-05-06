@@ -79,6 +79,11 @@ def process_video(video_path, user_level):
             guide_bad_point = "영상에서 사람 또는 키포인트를 인식하지 못했습니다."
             guide_recommend = "카메라 위치를 조정하거나 조명을 개선해주세요."
             
+            interpretations["shoulder_angle_diff"]
+            interpretations["movement_distance"]
+            interpretations["wrist_movement_total"]
+            interpretations["ankle_switch_count"]
+            
             print(f"점수: {final_score}")
             print(f"등급: {grade}")
             print(f"잘한 점: {guide_good_point}")
@@ -86,12 +91,12 @@ def process_video(video_path, user_level):
             print(f"추천: {guide_recommend}")
         else:
             print("[INFO] 키포인트 분석 중...")
-            final_score, grade, guide_good_point, guide_bad_point, guide_recommend = analyze.analyze(
+            final_score, grade, guide_good_point, guide_bad_point, guide_recommend, interpretations = analyze.analyze(
                 all_keypoints_data, frame_width, frame_height, user_level
             )
 
         print(f"[INFO] 분석 완료 - 점수: {final_score}, 등급: {grade}")
-        return final_score, grade, guide_good_point, guide_bad_point, guide_recommend, reencoded_path
+        return final_score, grade, guide_good_point, guide_bad_point, guide_recommend, interpretations, reencoded_path
 
     except Exception as e:
         print("[ERROR] 비디오 처리 중 예외 발생:")

@@ -52,8 +52,13 @@ def upload_file():
         temp_input_path = download_video_from_s3_url(video_url)
 
         # 비디오 처리
-        final_score, grade, good, bad, recommend, processed_path = process_video(temp_input_path, user_level)
+        final_score, grade, good, bad, recommend, interpretations, processed_path = process_video(temp_input_path, user_level)
 
+        shoulder_angle_diff_score = interpretations["shoulder_angle_diff"]
+        movement_distance_score = interpretations["movement_distance"]
+        wrist_movement_total_score = interpretations["wrist_movement_total"]
+        ankle_switch_count_score = interpretations["ankle_switch_count"]
+        
         # 결과 영상 S3 업로드
         analyzed_url = upload_video_to_s3(processed_path, analyzed_key)
 
@@ -67,7 +72,11 @@ def upload_file():
             "bad": bad,
             "recommend": recommend,
             "grade": grade,
-            "score": final_score
+            "score": final_score,
+            "shoulder_angle_diff" : shoulder_angle_diff_score,
+            "movement_distance" : movement_distance_score,
+            "wrist_movement_total" : wrist_movement_total_score,
+            "ankle_switch_count" : ankle_switch_count_score
         })
     except Exception as e:
         print(f"분석 실패: {e}")
