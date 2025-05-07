@@ -17,6 +17,7 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
     prev_right_wrist = None  # 이전 오른쪽 손목 좌표
     prev_left_ankle_y = None  # 이전 왼쪽 발목 y 좌표
     prev_right_ankle_y = None  # 이전 오른쪽 발목 y 좌표
+    prev_keypoints = None # 이전 키 포인트
     
     valid_face_count = 0
     ear_count = 0
@@ -30,10 +31,12 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
         if right_shoulder_angle_diff:
             shoulder_angles.append(right_shoulder_angle_diff)
         
-        # 2. 어깨, 엉덩이 좌표 이동 거리 계산 (상대적인 거리)
-        movement = calculate_movement(keypoints_data, frame_width, frame_height)
-        if movement:
-            movements.append(movement)
+        # 2. 상체 중심 이동 거리 계산 (프레임 간 변화 기반)
+        if prev_keypoints:
+            movement = calculate_upperbody_movement(prev_keypoints, keypoints_data, frame_width, frame_height)
+            if movement:
+                movements.append(movement)
+        prev_keypoints = keypoints_data
         
         # 3. 오른쪽 손목 이동 거리 누적 (상대적인 이동)
         right_wrist = keypoints_data[KEYPOINT_NAMES.index("Right Wrist")]
@@ -132,7 +135,7 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
         grade = "EXCELLENT"
     elif final_score >= 74:
         grade = "GOOD"
-    elif final_score >= 60:
+    elif final_score >= 66:
         grade = "COMMON"
     else:
         grade = "BAD"
@@ -160,24 +163,36 @@ def calculate_shoulder_angle_diff(keypoints_data):
     angle_diff_from_90 = abs(angle - 90)  # 90도에서 차이 계산
     return angle_diff_from_90
 
-# 어깨, 엉덩이 좌표 이동 거리 계산 함수 (상대적인 거리)
-def calculate_movement(keypoints_data, frame_width, frame_height):
-    left_shoulder = keypoints_data[KEYPOINT_NAMES.index("Left Shoulder")]
-    right_shoulder = keypoints_data[KEYPOINT_NAMES.index("Right Shoulder")]
-    left_hip = keypoints_data[KEYPOINT_NAMES.index("Left Hip")]
-    right_hip = keypoints_data[KEYPOINT_NAMES.index("Right Hip")]
-    
-    # 좌표가 (0, 0)일 경우 계산을 건너뜁니다.
-    if is_invalid_point(left_shoulder) or is_invalid_point(right_shoulder) or is_invalid_point(left_hip) or is_invalid_point(right_hip):
+def calculate_upperbody_movement(prev_keypoints, curr_keypoints, frame_width, frame_height):
+    def center(p1, p2):
+        return ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+
+    def is_valid(p1, p2):
+        return not (is_invalid_point(p1) or is_invalid_point(p2))
+
+    L_S_prev = prev_keypoints[KEYPOINT_NAMES.index("Left Shoulder")]
+    R_S_prev = prev_keypoints[KEYPOINT_NAMES.index("Right Shoulder")]
+    L_H_prev = prev_keypoints[KEYPOINT_NAMES.index("Left Hip")]
+    R_H_prev = prev_keypoints[KEYPOINT_NAMES.index("Right Hip")]
+
+    L_S_curr = curr_keypoints[KEYPOINT_NAMES.index("Left Shoulder")]
+    R_S_curr = curr_keypoints[KEYPOINT_NAMES.index("Right Shoulder")]
+    L_H_curr = curr_keypoints[KEYPOINT_NAMES.index("Left Hip")]
+    R_H_curr = curr_keypoints[KEYPOINT_NAMES.index("Right Hip")]
+
+    if not all([
+        is_valid(L_S_prev, R_S_prev),
+        is_valid(L_H_prev, R_H_prev),
+        is_valid(L_S_curr, R_S_curr),
+        is_valid(L_H_curr, R_H_curr)
+    ]):
         return 0
-    
-    # 어깨-엉덩이 이동 거리 계산
-    shoulder_distance = calculate_distance(left_shoulder, right_shoulder, frame_width, frame_height)
-    hip_distance = calculate_distance(left_hip, right_hip, frame_width, frame_height)
-    
-    # 어깨와 엉덩이의 이동 정도를 더하여 계산
-    total_movement = shoulder_distance + hip_distance
-    return total_movement
+
+    prev_center = center(center(L_S_prev, R_S_prev), center(L_H_prev, R_H_prev))
+    curr_center = center(center(L_S_curr, R_S_curr), center(L_H_curr, R_H_curr))
+
+    return calculate_distance(prev_center, curr_center, frame_width, frame_height)
+
 
 # 두 점 간의 거리 계산 함수 (상대적인 거리)
 def calculate_distance(p1, p2, frame_width=None, frame_height=None):

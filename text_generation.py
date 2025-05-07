@@ -22,17 +22,17 @@ CRITERIA = {
         "very_very_high": 50
     },
     "movement_distance": {
-        "very_very_low": 0,
-        "very_low": 0.05,
-        "low": 0.10,
-        "slightly_low": 0.15,
-        "normal_min": 0.22,
-        "normal": 0.23,
-        "normal_max": 0.25,
-        "slightly_high": 0.26,
-        "high": 0.27,
-        "very_high": 1,
-        "very_very_high": 2
+        "very_very_low": 0.002,
+        "very_low": 0.0025,
+        "low": 0.003,
+        "slightly_low": 0.0035,
+        "normal_min": 0.0043,
+        "normal": 0.0044,
+        "normal_max": 0.0046,
+        "slightly_high": 0.0055,
+        "high": 0.0075,
+        "very_high": 0.008,
+        "very_very_high": 0.01
     },
     "wrist_movement_total": {
         "very_very_low": 0,
