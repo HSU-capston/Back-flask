@@ -79,7 +79,7 @@ def analyze(all_keypoints_data, frame_width, frame_height, user_level):
     ear_ratio = ear_count / total_frames
 
     # 조건에 따라 리턴
-    if face_ratio > 0.7 or (ear_ratio < 0.7):
+    if face_ratio > 0.7 or (ear_ratio < 0.2):
         final_score = 0
         grade = "BAD"
         guide_good_point = "분석 가능한 자세가 감지되지 않았습니다."
